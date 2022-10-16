@@ -1,0 +1,19 @@
+GET http://localhost:8000
+Accept: application/json
+
+{"offset":0}
+###
+
+GET http://localhost:8000
+Accept: application/json
+
+{"offset":1}
+###
+
+POST http://localhost:8000/
+Content-Type: application/json
+
+{"record": {
+  "value":
+  "TGV0J3MgR28gIzEK"
+}}
