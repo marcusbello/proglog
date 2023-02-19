@@ -1,6 +1,39 @@
 package log
 
-import "encoding/binary"
+import (
+	"bufio"
+	"encoding/binary"
+	"os"
+	"sync"
+)
+
+var (
+	enc = binary.BigEndian
+)
+
+const (
+	lenWidth = 8
+)
+
+type store struct {
+	File *os.File
+	mu   sync.Mutex
+	buf  *bufio.Writer
+	size uint64
+}
+
+func newStore(f *os.File) (*store, error) {
+	fi, err := os.Stat(f.Name())
+	if err != nil {
+		return nil, err
+	}
+	size := uint64(fi.Size())
+	return &store{
+		File: f,
+		buf:  bufio.NewWriter(f),
+		size: size,
+	}, nil
+}
 
 func (s *store) Append(p []byte) (n, pos uint64, err error) {
 	s.mu.Lock()
@@ -52,4 +85,8 @@ func (s *store) Close() error {
 		return err
 	}
 	return s.File.Close()
+}
+
+func (s *store) Name() string {
+	return s.File.Name()
 }
