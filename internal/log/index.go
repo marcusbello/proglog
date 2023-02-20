@@ -1,8 +1,8 @@
 package log
 
 import (
+	"github.com/tysontate/gommap"
 	"io"
-	"launchpad.net/gommap"
 	"os"
 )
 
