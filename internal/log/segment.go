@@ -4,6 +4,7 @@ import (
 	"fmt"
 	api "github.com/marcusbello/proglog/api/v1"
 	"google.golang.org/protobuf/proto"
+	"log"
 	"os"
 	"path"
 )
@@ -98,9 +99,11 @@ func (s *segment) Remove() error {
 		return err
 	}
 	if err := os.Remove(s.index.Name()); err != nil {
+		log.Println("2nd remove")
 		return err
 	}
 	if err := os.Remove(s.store.Name()); err != nil {
+		log.Println("3rd remove")
 		return err
 	}
 	return nil
