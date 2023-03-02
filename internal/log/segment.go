@@ -4,7 +4,6 @@ import (
 	"fmt"
 	api "github.com/marcusbello/proglog/api/v1"
 	"google.golang.org/protobuf/proto"
-	"log"
 	"os"
 	"path"
 )
@@ -16,6 +15,9 @@ type segment struct {
 	config                 Config
 }
 
+// END: intro
+
+// START: newsegment
 func newSegment(dir string, baseOffset uint64, c Config) (*segment, error) {
 	s := &segment{
 		baseOffset: baseOffset,
@@ -52,6 +54,9 @@ func newSegment(dir string, baseOffset uint64, c Config) (*segment, error) {
 	return s, nil
 }
 
+// END: newsegment
+
+// START: append
 func (s *segment) Append(record *api.Record) (offset uint64, err error) {
 	cur := s.nextOffset
 	record.Offset = cur
@@ -74,13 +79,15 @@ func (s *segment) Append(record *api.Record) (offset uint64, err error) {
 	return cur, nil
 }
 
+// END: append
+
+// START: read
 func (s *segment) Read(off uint64) (*api.Record, error) {
 	_, pos, err := s.index.Read(int64(off - s.baseOffset))
 	if err != nil {
 		return nil, err
 	}
 	p, err := s.store.Read(pos)
-
 	if err != nil {
 		return nil, err
 	}
@@ -89,26 +96,17 @@ func (s *segment) Read(off uint64) (*api.Record, error) {
 	return record, err
 }
 
+// END: read
+
+// START: ismaxed
 func (s *segment) IsMaxed() bool {
 	return s.store.size >= s.config.Segment.MaxStoreBytes ||
 		s.index.size >= s.config.Segment.MaxIndexBytes
 }
 
-func (s *segment) Remove() error {
-	if err := s.store.Close(); err != nil {
-		return err
-	}
-	if err := os.Remove(s.index.Name()); err != nil {
-		log.Println("2nd remove")
-		return err
-	}
-	if err := os.Remove(s.store.Name()); err != nil {
-		log.Println("3rd remove")
-		return err
-	}
-	return nil
-}
+// END: ismaxed
 
+// START: close
 func (s *segment) Close() error {
 	if err := s.index.Close(); err != nil {
 		return err
@@ -119,9 +117,29 @@ func (s *segment) Close() error {
 	return nil
 }
 
+// END: close
+
+// START: remove
+func (s *segment) Remove() error {
+	if err := s.Close(); err != nil {
+		return err
+	}
+	if err := os.Remove(s.index.Name()); err != nil {
+		return err
+	}
+	if err := os.Remove(s.store.Name()); err != nil {
+		return err
+	}
+	return nil
+}
+
+// END: remove
+
+// START: nearestmultiple
 func nearestMultiple(j, k uint64) uint64 {
 	if j >= 0 {
 		return (j / k) * k
 	}
 	return ((j - k + 1) / k) * k
+
 }
