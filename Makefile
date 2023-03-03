@@ -16,7 +16,6 @@ test: copy_policy copy_model
 
 .PHONY: gencert
 gencert:
-	echo ${CONFIG_PATH}
 	cfssl gencert \
 	-initca test/ca-csr.json | cfssljson -bare ca
 
@@ -54,3 +53,7 @@ compile:
      --go_opt=paths=source_relative \
      --go-grpc_opt=paths=source_relative \
      --proto_path=.
+
+TAG ?= 0.0.1
+build-docker:
+	docker build -t github.com/marcusbello/proglog:$(TAG) .

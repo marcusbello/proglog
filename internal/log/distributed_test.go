@@ -28,10 +28,7 @@ func TestMultipleNodes(t *testing.T) {
 			_ = os.RemoveAll(dir)
 		}(dataDir)
 
-		ln, err := net.Listen(
-			"tcp",
-			fmt.Sprintf("127.0.0.1:%d", ports[i]),
-		)
+		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", ports[i]))
 		require.NoError(t, err)
 
 		config := log.Config{}
@@ -41,9 +38,7 @@ func TestMultipleNodes(t *testing.T) {
 		config.Raft.ElectionTimeout = 50 * time.Millisecond
 		config.Raft.LeaderLeaseTimeout = 50 * time.Millisecond
 		config.Raft.CommitTimeout = 5 * time.Millisecond
-		// END: distributed_log_test_intro
-
-		// START: distributed_log_test_cont
+		config.Raft.BindAddr = ln.Addr().String()
 
 		if i == 0 {
 			config.Raft.Bootstrap = true
@@ -64,9 +59,7 @@ func TestMultipleNodes(t *testing.T) {
 
 		logs = append(logs, l)
 	}
-	// END: distributed_log_test_cont
 
-	// START: distributed_log_test_replicate
 	records := []*api.Record{
 		{Value: []byte("first")},
 		{Value: []byte("second")},
@@ -89,9 +82,7 @@ func TestMultipleNodes(t *testing.T) {
 			return true
 		}, 500*time.Millisecond, 50*time.Millisecond)
 	}
-	// END: distributed_log_test_replicate
 
-	// START: get_servers
 	servers, err := logs[0].GetServers()
 	require.NoError(t, err)
 	require.Equal(t, 3, len(servers))
@@ -99,24 +90,16 @@ func TestMultipleNodes(t *testing.T) {
 	require.False(t, servers[1].IsLeader)
 	require.False(t, servers[2].IsLeader)
 
-	// START: distributed_log_test_leave
-	err = logs[0].Leave("1") //<label id="before_leave" />
-	require.NoError(t, err)  //<label id="after_leave" />
+	err = logs[0].Leave("1")
+	require.NoError(t, err)
 
-	time.Sleep(50 * time.Millisecond) //<label id="second_leave" />
+	time.Sleep(50 * time.Millisecond)
 
 	servers, err = logs[0].GetServers()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(servers))
 	require.True(t, servers[0].IsLeader)
 	require.False(t, servers[1].IsLeader)
-	// END: get_servers
-
-	// START: distributed_log_test_leave
-	//err := logs[0].Leave("1")
-	//require.NoError(t, err)
-	//
-	//time.Sleep(50 * time.Millisecond)
 
 	off, err := logs[0].Append(&api.Record{
 		Value: []byte("third"),
